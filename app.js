@@ -369,8 +369,16 @@ document.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse')
 
 /* ---------- Bild aus / Vollbild / Wake-Lock ---------- */
 function blackout(on = !S.black) { S.black = on; $('blackout').hidden = !on; layout(); }
+function isInstalledApp() {
+  return navigator.standalone === true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+}
+function canFullscreen() {
+  const el = document.documentElement;
+  return !!(el.requestFullscreen || el.webkitRequestFullscreen) && (document.fullscreenEnabled || document.webkitFullscreenEnabled);
+}
 async function toggleFullscreen() {
   const d = document, el = d.documentElement;
+  if (!canFullscreen()) { toast(isInstalledApp() ? 'Läuft schon als App – mehr Vollbild erlaubt das System hier nicht.' : 'Vollbild nicht möglich – App über „Zum Home-Bildschirm“ installieren.'); return; }
   try {
     if (d.fullscreenElement || d.webkitFullscreenElement) await (d.exitFullscreen ? d.exitFullscreen() : d.webkitExitFullscreen());
     else await (el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : el.webkitRequestFullscreen());
@@ -467,7 +475,7 @@ $('btnStart').addEventListener('click', async () => {
     stage.hidden = false; sizeInk();
     await startCamera();
     $('splash').hidden = true; keepAwake(); poke();
-    if (matchMedia('(display-mode: browser)').matches && !/iPhone/.test(navigator.userAgent)) toggleFullscreen();
+    if (!isInstalledApp() && canFullscreen()) toggleFullscreen();
   } catch (e) {
     stage.hidden = true; camError(e);
   } finally { $('btnStart').disabled = false; $('btnStart').textContent = 'Kamera starten'; }
@@ -477,5 +485,6 @@ document.addEventListener('fullscreenchange', layout);
 document.addEventListener('webkitfullscreenchange', layout);
 video.addEventListener('resize', layout);
 renderGallery();
+if (!canFullscreen() || isInstalledApp()) toolbar.querySelector('[data-act="fullscreen"]').hidden = true;
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
