@@ -3,7 +3,7 @@
 Web-App der Schülerfirma **Dispektrum** (Robert-Bosch-Gymnasium Langenau) zum [VisuTable](https://dispektrum.rbgl.de/visutable/):
 Tablet auf den Tisch legen, mit dem Beamer verbinden, App öffnen – fertig.
 
-**App öffnen:** https://maxthebai.github.io/visutable-app/
+**App öffnen:** https://visu.infra-max.de
 
 ## Funktionen
 - Livebild der Rückkamera in bis zu 4K, schwarzer Hintergrund, Steuerung blendet sich automatisch aus
