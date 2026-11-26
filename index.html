@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>VisuTable – Dokumentenkamera | Dispektrum</title>
+<meta name="description" content="VisuTable Dokumentenkamera der Schülerfirma Dispektrum – Tablet auf den VisuTable legen, an den Beamer anschließen, fertig.">
+<meta name="theme-color" content="#121316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VisuTable">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Startbildschirm -->
+<section id="splash" class="splash">
+  <div class="splash-inner">
+    <img src="logo.png" alt="Dispektrum – von und für Schule" class="splash-logo">
+    <h1>Visu<span>Table</span></h1>
+    <p class="tagline">Die Dokumentenkamera von Dispektrum</p>
+    <button id="btnStart" class="btn-primary">Kamera starten</button>
+    <p id="splashMsg" class="splash-msg" role="status"></p>
+    <ul class="tips">
+      <li>Tablet mit der Kamera nach unten auf den VisuTable legen</li>
+      <li>Tablet per HDMI-Adapter, AirPlay oder Cast mit dem Beamer verbinden</li>
+      <li>Antippen blendet die Steuerung ein, nach ein paar Sekunden verschwindet sie wieder</li>
+    </ul>
+  </div>
+  <footer class="splash-foot">Schülerfirma Dispektrum · Robert-Bosch-Gymnasium Langenau · <a href="https://dispektrum.rbgl.de" target="_blank" rel="noopener">dispektrum.rbgl.de</a></footer>
+</section>
+
+<!-- Bühne -->
+<main id="stage" class="stage" hidden>
+  <video id="video" class="media" playsinline muted autoplay></video>
+  <canvas id="frozen" class="media" hidden></canvas>
+  <img id="compareImg" class="compare-img" alt="" hidden>
+  <canvas id="ink" class="ink"></canvas>
+
+  <div id="freezeBadge" class="badge" hidden>⏸ Standbild</div>
+  <div id="zoomBadge" class="badge badge-zoom" hidden>100 %</div>
+  <img id="watermark" src="logo.png" class="watermark" alt="">
+
+  <div id="blackout" class="blackout" hidden>
+    <img src="logo.png" alt="">
+  </div>
+
+  <!-- Zeichen-Leiste -->
+  <div id="drawbar" class="drawbar" hidden>
+    <button class="swatch active" data-color="#ff3b30" style="--c:#ff3b30" aria-label="Rot"></button>
+    <button class="swatch" data-color="#F8B933" style="--c:#F8B933" aria-label="Gelb"></button>
+    <button class="swatch" data-color="#3786D4" style="--c:#3786D4" aria-label="Blau"></button>
+    <button class="swatch" data-color="#34c759" style="--c:#34c759" aria-label="Grün"></button>
+    <button class="swatch" data-color="#ffffff" style="--c:#ffffff" aria-label="Weiß"></button>
+    <span class="sep"></span>
+    <button id="penThin" class="chip active" data-w="4">Stift</button>
+    <button id="penHi" class="chip" data-w="22" data-hi="1">Marker</button>
+    <button id="inkUndo" class="chip">↶</button>
+    <button id="inkClear" class="chip">Löschen</button>
+  </div>
+
+  <!-- Werkzeugleiste -->
+  <nav id="toolbar" class="toolbar">
+    <img src="logo.png" class="tb-logo" alt="Dispektrum">
+    <button data-act="freeze" title="Standbild (Leertaste)"><svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg><span>Standbild</span></button>
+    <button data-act="snap" title="Foto aufnehmen (S)"><svg viewBox="0 0 24 24"><path d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4H9zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/></svg><span>Foto</span></button>
+    <button data-act="zoomout" title="Verkleinern (−)"><svg viewBox="0 0 24 24"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm-3.5 6v2h7V9z"/></svg><span>Zoom −</span></button>
+    <button data-act="zoomin" title="Vergrößern (+)"><svg viewBox="0 0 24 24"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zM9 6.5V9H6.5v2H9v2.5h2V11h2.5V9H11V6.5z"/></svg><span>Zoom +</span></button>
+    <button data-act="rotate" title="Drehen (R)"><svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg><span>Drehen</span></button>
+    <button data-act="doc" title="Dokumentmodus (D)"><svg viewBox="0 0 24 24"><path d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V9h5.5zM7 13h10v1.6H7zm0 3.4h10V18H7z"/></svg><span>Text</span></button>
+    <button data-act="draw" title="Zeichnen (P)"><svg viewBox="0 0 24 24"><path d="M3 17.2V21h3.8L17.8 10l-3.8-3.8zM20.7 7a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.8 3.8z"/></svg><span>Zeichnen</span></button>
+    <button data-act="gallery" title="Fotos (G)"><svg viewBox="0 0 24 24"><path d="M4 4h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 12h12l-4-5-3 3.8L7 12zm16-9h2v13a2 2 0 0 1-2 2H6v-2h14z"/></svg><span>Fotos <b id="galCount"></b></span></button>
+    <button data-act="black" title="Bild aus (B)"><svg viewBox="0 0 24 24"><path d="M3 5h18v12H3zm2 2v8h14V7zm3 12h8v2H8z"/><path d="m4 3 17 17-1.4 1.4L2.6 4.4z"/></svg><span>Bild aus</span></button>
+    <button data-act="settings" title="Einstellungen"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.3 2.9a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1L11 21h4l.3-2.9a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span>Mehr</span></button>
+    <button data-act="fullscreen" title="Vollbild (F)"><svg viewBox="0 0 24 24"><path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/></svg><span>Vollbild</span></button>
+  </nav>
+
+  <!-- Einstellungen -->
+  <aside id="panel" class="panel" hidden>
+    <header><h2>Einstellungen</h2><button class="x" data-close="panel" aria-label="Schließen">✕</button></header>
+    <label class="row">Kamera
+      <select id="selCam"></select>
+    </label>
+    <label class="row">Auflösung
+      <select id="selRes">
+        <option value="3840x2160">4K (3840 × 2160)</option>
+        <option value="1920x1080" selected>Full HD (1920 × 1080)</option>
+        <option value="1280x720">HD (1280 × 720)</option>
+      </select>
+    </label>
+    <p id="resInfo" class="hint"></p>
+    <label class="row">Helligkeit <input type="range" id="rngBright" min="50" max="180" value="100"></label>
+    <label class="row">Kontrast <input type="range" id="rngContrast" min="50" max="250" value="100"></label>
+    <label class="row">Sättigung <input type="range" id="rngSat" min="0" max="200" value="100"></label>
+    <label class="check"><input type="checkbox" id="chkMirror"> Bild spiegeln</label>
+    <label class="check"><input type="checkbox" id="chkTorch"> Taschenlampe / Licht <small id="torchHint"></small></label>
+    <label class="check"><input type="checkbox" id="chkWatermark" checked> Dispektrum-Logo im Bild</label>
+    <label class="check"><input type="checkbox" id="chkAutohide" checked> Steuerung automatisch ausblenden</label>
+    <div class="row-btns">
+      <button id="btnReset" class="chip">Bild zurücksetzen</button>
+      <button id="btnFocus" class="chip">Neu fokussieren</button>
+    </div>
+    <details class="keys">
+      <summary>Tastatur &amp; Presenter</summary>
+      <p><kbd>Leertaste</kbd>/<kbd>Bild↓</kbd> Standbild · <kbd>S</kbd>/<kbd>Bild↑</kbd> Foto · <kbd>+</kbd>/<kbd>−</kbd> Zoom · <kbd>0</kbd> Zurücksetzen · <kbd>R</kbd> Drehen · <kbd>D</kbd> Textmodus · <kbd>P</kbd> Zeichnen · <kbd>G</kbd> Fotos · <kbd>B</kbd>/<kbd>.</kbd> Bild aus · <kbd>F</kbd> Vollbild · Pfeiltasten verschieben</p>
+    </details>
+    <p class="hint brand">VisuTable · Schülerfirma Dispektrum · v1.0</p>
+  </aside>
+
+  <!-- Galerie -->
+  <aside id="gallery" class="gallery" hidden>
+    <header><h2>Fotos dieser Stunde</h2>
+      <div>
+        <button id="galSaveAll" class="chip">Alle speichern</button>
+        <button id="galClear" class="chip">Alle löschen</button>
+        <button class="x" data-close="gallery" aria-label="Schließen">✕</button>
+      </div>
+    </header>
+    <p class="hint">Fotos bleiben nur auf diesem Gerät, bis die Seite geschlossen wird. Antippen: groß zeigen · ⇆: neben dem Livebild vergleichen.</p>
+    <div id="galGrid" class="gal-grid"></div>
+  </aside>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
